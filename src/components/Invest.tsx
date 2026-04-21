@@ -6,8 +6,7 @@ import { getPlans, createInvestment } from '../services/investmentService'
 import { toNano } from '@ton/ton'
 
 // Platform wallet address where investments are sent
-// TODO: Replace with your actual platform wallet address
-const PLATFORM_WALLET = 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c'
+const PLATFORM_WALLET = 'UQD1Fm7uwhtWK9erHhUUKyPKUvm_X39cXJO_aeoaKL1YcMB5'
 
 export default function Invest() {
   const wallet = useTonWallet()
