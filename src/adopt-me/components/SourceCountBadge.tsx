@@ -1,5 +1,5 @@
-import type { AggregatedPetValue, ConfidenceLevel } from '../types/pet';
 import { CONFIDENCE_COLORS, CONFIDENCE_LABELS } from '../types/pet';
+import type { AggregatedPetValue } from '../types/pet';
 
 interface SourceCountBadgeProps {
   pet: AggregatedPetValue;

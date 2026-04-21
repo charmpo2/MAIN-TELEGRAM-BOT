@@ -1,22 +1,15 @@
 import { useState, useMemo } from 'react';
-import { Search, RefreshCw, Sparkles, Filter } from 'lucide-react';
+import { Search, RefreshCw, Sparkles } from 'lucide-react';
 import { useAggregatedValues } from '../hooks/useAggregatedValues';
 import { useInventory } from '../hooks/useInventory';
 import { PetCard } from '../components/PetCard';
 import type { AggregatedPetValue, PetCategory } from '../types/pet';
 
 const CATEGORIES: PetCategory[] = ['legendary', 'ultra-rare', 'rare', 'uncommon', 'common'];
-const CATEGORY_COLORS = {
-  legendary: 'text-yellow-400',
-  'ultra-rare': 'text-purple-400',
-  rare: 'text-blue-400',
-  uncommon: 'text-green-400',
-  common: 'text-gray-400',
-};
 
 export function ValuesPage() {
   const { pets, newPets, loading, error, refetch, lastUpdated } = useAggregatedValues();
-  const { addPet, addToWishlist } = useInventory();
+  const { addPet } = useInventory();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PetCategory | 'all'>('all');

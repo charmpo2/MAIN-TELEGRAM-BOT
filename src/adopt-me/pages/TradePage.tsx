@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Scale, Check, X, ArrowRight } from 'lucide-react';
-import { useInventory } from '../hooks/useInventory';
+import { Plus, Trash2, Scale } from 'lucide-react';
 import { useAggregatedValues } from '../hooks/useAggregatedValues';
 import type { AggregatedPetValue, InventoryPet } from '../types/pet';
 
@@ -10,7 +9,6 @@ interface TradeSide {
 }
 
 export function TradePage() {
-  const { inventory } = useInventory();
   const { pets } = useAggregatedValues();
   const [youGive, setYouGive] = useState<TradeSide>({ pets: [], totalValue: 0 });
   const [youGet, setYouGet] = useState<TradeSide>({ pets: [], totalValue: 0 });

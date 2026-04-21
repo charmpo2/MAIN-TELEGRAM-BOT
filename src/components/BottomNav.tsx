@@ -1,4 +1,4 @@
-import { Home, TrendingUp, Users, History, Wallet } from 'lucide-react'
+import { Home, TrendingUp, Users, History, Wallet, PawPrint } from 'lucide-react'
 
 interface BottomNavProps {
   activeTab: string
@@ -10,6 +10,7 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
     { id: 'dashboard', label: 'Home', icon: Home },
     { id: 'invest', label: 'Invest', icon: TrendingUp },
     { id: 'wallet', label: 'Wallet', icon: Wallet },
+    { id: 'adoptme', label: 'Adopt Me', icon: PawPrint },
     { id: 'referrals', label: 'Referrals', icon: Users },
     { id: 'history', label: 'History', icon: History },
   ]
