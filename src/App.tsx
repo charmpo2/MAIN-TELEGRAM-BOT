@@ -7,9 +7,14 @@ import History from './components/History'
 import Wallet from './components/Wallet'
 import BottomNav from './components/BottomNav'
 import { processReferralCode } from './services/referralService'
+import { ValuesPage } from './adopt-me/pages/ValuesPage'
+import { InventoryPage } from './adopt-me/pages/InventoryPage'
+import { TradePage } from './adopt-me/pages/TradePage'
+import { AdoptMeNav } from './adopt-me/components/AdoptMeNav'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [adoptMeTab, setAdoptMeTab] = useState('values')
   const { hideBackButton, initDataUnsafe, user } = useTelegram()
 
   useEffect(() => {
@@ -31,6 +36,17 @@ export default function App() {
       case 'wallet': return <Wallet />
       case 'referrals': return <Referrals />
       case 'history': return <History />
+      case 'adoptme':
+        return (
+          <div className="h-full flex flex-col">
+            <AdoptMeNav activeTab={adoptMeTab} onTabChange={setAdoptMeTab} />
+            <div className="flex-1 overflow-y-auto">
+              {adoptMeTab === 'values' && <ValuesPage />}
+              {adoptMeTab === 'inventory' && <InventoryPage />}
+              {adoptMeTab === 'trade' && <TradePage />}
+            </div>
+          </div>
+        )
       default: return <Dashboard />
     }
   }
