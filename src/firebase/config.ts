@@ -12,7 +12,25 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
 }
 
-const app = initializeApp(firebaseConfig)
-export const db = getFirestore(app)
-export const auth = getAuth(app)
+// Check if Firebase config is valid
+const isConfigValid = firebaseConfig.apiKey && firebaseConfig.projectId
+
+let app: ReturnType<typeof initializeApp> | null = null
+let db: ReturnType<typeof getFirestore> | null = null
+let auth: ReturnType<typeof getAuth> | null = null
+
+if (isConfigValid) {
+  try {
+    app = initializeApp(firebaseConfig)
+    db = getFirestore(app)
+    auth = getAuth(app)
+    console.log('[Firebase] Initialized successfully')
+  } catch (error) {
+    console.error('[Firebase] Initialization error:', error)
+  }
+} else {
+  console.warn('[Firebase] Config missing - running without Firebase')
+}
+
+export { db, auth }
 export default app
