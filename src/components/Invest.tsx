@@ -1,25 +1,32 @@
 import { useState } from 'react'
 import { ArrowRight, AlertTriangle, CheckCircle2 } from 'lucide-react'
-import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react'
+import { TonConnectButton, useTonWallet, useTonConnectUI } from '@tonconnect/ui-react'
 import { useTelegram } from '../hooks/useTelegram'
 import { getPlans, createInvestment } from '../services/investmentService'
+import { toNano } from '@ton/ton'
+
+// Platform wallet address where investments are sent
+// TODO: Replace with your actual platform wallet address
+const PLATFORM_WALLET = 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c'
 
 export default function Invest() {
   const wallet = useTonWallet()
   const { hapticFeedback } = useTelegram()
+  const [tonConnectUI] = useTonConnectUI()
   const [selectedPlan, setSelectedPlan] = useState<string>('')
   const [amount, setAmount] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const plans = getPlans()
   const plan = plans.find(p => p.id === selectedPlan)
 
-  const handleInvest = () => {
+  const handleInvest = async () => {
     setError('')
     setSuccess(false)
 
-    if (!wallet) {
+    if (!wallet || !tonConnectUI?.connected) {
       setError('Please connect your TON wallet first')
       return
     }
@@ -35,18 +42,52 @@ export default function Invest() {
       return
     }
 
-    const investment = createInvestment(plan.id, numAmount)
-    if (!investment) {
-      setError('Failed to create investment')
-      return
+    setLoading(true)
+
+    try {
+      // Convert TON to nanoTON (1 TON = 1e9 nanoTON)
+      const amountNano = toNano(numAmount.toString())
+
+      // Send transaction through TON Connect
+      const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 600, // 10 minutes
+        messages: [
+          {
+            address: PLATFORM_WALLET,
+            amount: amountNano.toString(),
+            payload: `invest:${plan.id}:${numAmount}`, // Memo with plan info
+          },
+        ],
+      }
+
+      // This will open the user's wallet for confirmation
+      const result = await tonConnectUI.sendTransaction(transaction)
+
+      // If transaction was sent successfully, create the investment
+      if (result) {
+        const investment = createInvestment(plan.id, numAmount)
+        if (!investment) {
+          setError('Payment sent but failed to create investment record. Contact support.')
+          setLoading(false)
+          return
+        }
+
+        hapticFeedback('success')
+        setSuccess(true)
+        setAmount('')
+        setSelectedPlan('')
+        setTimeout(() => setSuccess(false), 3000)
+      }
+    } catch (err: any) {
+      console.error('Transaction error:', err)
+      if (err.message?.includes('cancelled') || err.message?.includes('rejected')) {
+        setError('Transaction was cancelled in your wallet')
+      } else {
+        setError('Transaction failed. Please try again or check your wallet balance.')
+      }
+    } finally {
+      setLoading(false)
     }
-
-    hapticFeedback('success')
-    setSuccess(true)
-    setAmount('')
-    setSelectedPlan('')
-
-    setTimeout(() => setSuccess(false), 3000)
   }
 
   const estimatedReturn = plan && amount ? parseFloat(amount) * plan.dailyRate * plan.duration : 0
@@ -175,15 +216,26 @@ export default function Invest() {
 
       <button
         onClick={handleInvest}
-        disabled={!wallet || !plan || !amount}
+        disabled={!wallet || !plan || !amount || loading}
         className={`mt-2 w-full py-3.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all ${
-          wallet && plan && amount
+          loading
+            ? 'bg-white/10 text-white/50 cursor-wait'
+            : wallet && plan && amount
             ? 'bg-ton-accent text-ton-dark active:scale-[0.98]'
             : 'bg-white/10 text-white/30 cursor-not-allowed'
         }`}
       >
-        Invest Now
-        <ArrowRight size={16} />
+        {loading ? (
+          <>
+            <div className="w-4 h-4 border-2 border-ton-dark/30 border-t-ton-dark rounded-full animate-spin" />
+            Sending to Wallet...
+          </>
+        ) : (
+          <>
+            Invest Now
+            <ArrowRight size={16} />
+          </>
+        )}
       </button>
 
       <p className="text-white/30 text-xs text-center">

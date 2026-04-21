@@ -23,11 +23,11 @@ export default function Referrals() {
 
   const handleShare = useCallback(() => {
     const link = getReferralLink(referralData.code)
-    const text = `Join TON Invest and earn daily rewards! Use my referral link: ${link}`
+    const text = `Join TON Spacer and earn daily rewards! Use my referral link: ${link}`
     if (webApp) {
       webApp.openLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`)
     } else {
-      navigator.share?.({ title: 'TON Invest', text, url: link }).catch(() => {})
+      navigator.share?.({ title: 'TON Spacer', text, url: link }).catch(() => {})
     }
     hapticFeedback('light')
   }, [referralData.code, webApp, hapticFeedback])

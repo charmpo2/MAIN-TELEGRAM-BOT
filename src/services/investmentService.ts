@@ -163,18 +163,64 @@ export function getTotalInvested(): number {
     .reduce((sum, i) => sum + i.amount, 0)
 }
 
+export function getTotalEverInvested(): number {
+  return getInvestments()
+    .reduce((sum, i) => sum + i.amount, 0)
+}
+
 export function getTotalDailyReward(): number {
   return getInvestments()
     .filter(i => i.status === 'active')
     .reduce((sum, i) => sum + getDailyReward(i), 0)
 }
 
-export function claimDailyRewards(): number {
+export function checkAndUpdateExpiredPlans(): void {
   const investments = getInvestments()
+  const now = new Date()
+  let updated = false
+
+  investments.forEach(inv => {
+    if (inv.status === 'active' && new Date(inv.endDate) <= now) {
+      inv.status = 'completed'
+      updated = true
+    }
+  })
+
+  if (updated) {
+    localStorage.setItem(getStorageKey('investments_' + getWalletKey()), JSON.stringify(investments))
+  }
+}
+
+export function getGameBalance(): number {
+  return getTransactions()
+    .filter(t => t.type === 'reward' && t.status === 'completed')
+    .reduce((sum, t) => sum + t.amount, 0)
+}
+
+export function getLastClaimTime(): number {
+  const key = getStorageKey('last_claim_' + getWalletKey())
+  const stored = localStorage.getItem(key)
+  return stored ? parseInt(stored, 10) : 0
+}
+
+export function canClaimRewards(): boolean {
+  const lastClaim = getLastClaimTime()
+  const now = Date.now()
+  const oneDay = 24 * 60 * 60 * 1000
+  return now - lastClaim >= oneDay
+}
+
+export function claimDailyRewards(): number {
+  if (!canClaimRewards()) return 0
+
+  checkAndUpdateExpiredPlans()
+
+  const investments = getInvestments().filter(i => i.status === 'active')
+  if (investments.length === 0) return 0
+
   let totalClaimed = 0
 
   investments.forEach(inv => {
-    if (inv.status !== 'active') return
     const daily = getDailyReward(inv)
     inv.claimedReward += daily
     totalClaimed += daily
@@ -185,7 +231,8 @@ export function claimDailyRewards(): number {
   })
 
   if (totalClaimed > 0) {
-    localStorage.setItem(getStorageKey('investments_' + getWalletKey()), JSON.stringify(investments))
+    localStorage.setItem(getStorageKey('investments_' + getWalletKey()), JSON.stringify(getInvestments()))
+    localStorage.setItem(getStorageKey('last_claim_' + getWalletKey()), Date.now().toString())
     addTransaction({
       id: Math.random().toString(36).substring(2, 10),
       type: 'reward',
@@ -200,6 +247,6 @@ export function claimDailyRewards(): number {
 }
 
 export function getReferralLink(code: string): string {
-  const botUsername = 'ton_invest_bot'
+  const botUsername = 'TON_SPACES_BOT'
   return `https://t.me/${botUsername}?start=${code}`
 }

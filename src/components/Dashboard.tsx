@@ -5,10 +5,14 @@ import { useTelegram } from '../hooks/useTelegram'
 import {
   getInvestments,
   getTotalInvested,
+  getTotalEverInvested,
   getTotalDailyReward,
   getTransactions,
   claimDailyRewards,
   getDailyReward,
+  getGameBalance,
+  canClaimRewards,
+  checkAndUpdateExpiredPlans,
   type Investment,
 } from '../services/investmentService'
 
@@ -17,15 +21,22 @@ export default function Dashboard() {
   const { user, hapticFeedback } = useTelegram()
   const [investments, setInvestments] = useState<Investment[]>([])
   const [totalInvested, setTotalInvested] = useState(0)
+  const [totalEverInvested, setTotalEverInvested] = useState(0)
   const [dailyReward, setDailyReward] = useState(0)
-  const [claimedToday, setClaimedToday] = useState(false)
-  const [lastTxCount, setLastTxCount] = useState(0)
+  const [gameBalance, setGameBalance] = useState(0)
+  const [canClaim, setCanClaim] = useState(false)
+  const [totalClaimedAmount, setTotalClaimedAmount] = useState(0)
 
   const refresh = useCallback(() => {
+    checkAndUpdateExpiredPlans()
     setInvestments(getInvestments())
     setTotalInvested(getTotalInvested())
+    setTotalEverInvested(getTotalEverInvested())
     setDailyReward(getTotalDailyReward())
-    setLastTxCount(getTransactions().length)
+    setGameBalance(getGameBalance())
+    setCanClaim(canClaimRewards())
+    const claimedTxns = getTransactions().filter(t => t.type === 'reward' && t.status === 'completed')
+    setTotalClaimedAmount(claimedTxns.reduce((sum, t) => sum + t.amount, 0))
   }, [])
 
   useEffect(() => {
@@ -35,12 +46,12 @@ export default function Dashboard() {
   }, [refresh])
 
   const handleClaim = () => {
-    if (claimedToday || dailyReward <= 0) return
-    claimDailyRewards()
-    hapticFeedback('success')
-    setClaimedToday(true)
-    refresh()
-    setTimeout(() => setClaimedToday(false), 86400000)
+    if (!canClaim || dailyReward <= 0) return
+    const claimed = claimDailyRewards()
+    if (claimed > 0) {
+      hapticFeedback('success')
+      refresh()
+    }
   }
 
   const formatTon = (val: number) => val.toFixed(3)
@@ -57,14 +68,14 @@ export default function Dashboard() {
         <TonConnectButton className="ton-connect-btn" />
       </div>
 
-      {/* Balance Card */}
+      {/* Balance Card - Game Balance */}
       <div className="bg-gradient-to-br from-ton-blue/30 to-ton-accent/20 rounded-2xl p-5 border border-white/10 glow-effect">
         <div className="flex items-center gap-2 text-white/70 mb-1">
           <Wallet size={16} />
-          <span className="text-sm">Total Invested</span>
+          <span className="text-sm">Game Balance (Claimed)</span>
         </div>
         <div className="text-3xl font-bold text-white mb-2">
-          {formatTon(totalInvested)} <span className="text-ton-accent text-lg">TON</span>
+          {formatTon(gameBalance)} <span className="text-ton-accent text-lg">TON</span>
         </div>
         <div className="flex items-center gap-2 text-ton-accent text-sm">
           <TrendingUp size={14} />
@@ -72,20 +83,32 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Total Invested Stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-ton-card rounded-xl p-3 border border-white/10 text-center">
+          <p className="text-white/50 text-xs mb-1">Active Invested</p>
+          <p className="text-white font-bold text-lg">{formatTon(totalInvested)} TON</p>
+        </div>
+        <div className="bg-ton-card rounded-xl p-3 border border-white/10 text-center">
+          <p className="text-white/50 text-xs mb-1">Total Ever Invested</p>
+          <p className="text-white font-bold text-lg">{formatTon(totalEverInvested)} TON</p>
+        </div>
+      </div>
+
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={handleClaim}
-          disabled={claimedToday || dailyReward <= 0}
+          disabled={!canClaim || dailyReward <= 0}
           className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
-            claimedToday || dailyReward <= 0
+            !canClaim || dailyReward <= 0
               ? 'bg-white/5 border-white/5 text-white/30'
               : 'bg-ton-accent/20 border-ton-accent/30 text-ton-accent active:scale-95'
           }`}
         >
           <Zap size={24} />
           <span className="text-sm font-medium">
-            {claimedToday ? 'Claimed' : 'Claim Reward'}
+            {!canClaim ? 'Claimed Today' : 'Claim Reward'}
           </span>
         </button>
         <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 text-white/70">
@@ -105,8 +128,8 @@ export default function Dashboard() {
           <p className="text-white font-bold text-lg">{investments.filter(i => i.status === 'completed').length}</p>
         </div>
         <div className="bg-ton-card rounded-xl p-3 border border-white/5 text-center">
-          <p className="text-white/50 text-xs mb-1">Txns</p>
-          <p className="text-white font-bold text-lg">{lastTxCount}</p>
+          <p className="text-white/50 text-xs mb-1">Claimed</p>
+          <p className="text-white font-bold text-lg">{formatTon(totalClaimedAmount)}</p>
         </div>
       </div>
 
