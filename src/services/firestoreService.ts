@@ -14,7 +14,7 @@ import {
 import { db } from '../firebase/config'
 import type { Investment, Transaction, ReferralData } from './investmentService'
 
-const FIREBASE_ENABLED = !!import.meta.env.VITE_FIREBASE_PROJECT_ID
+const FIREBASE_ENABLED = !!import.meta.env.VITE_FIREBASE_PROJECT_ID && !!db
 
 function getUserId(): string {
   const wallet = localStorage.getItem('ton_wallet_address')
@@ -30,7 +30,7 @@ export async function getInvestmentsFromFirestore(): Promise<Investment[]> {
   try {
     const userId = getUserId()
     const q = query(
-      collection(db, 'investments'),
+      collection(db!, 'investments'),
       where('userId', '==', userId),
       orderBy('startDate', 'desc')
     )
@@ -45,7 +45,7 @@ export async function saveInvestmentToFirestore(investment: Investment) {
   if (!FIREBASE_ENABLED) return
   try {
     const userId = getUserId()
-    await addDoc(collection(db, 'investments'), {
+    await addDoc(collection(db!, 'investments'), {
       ...investment,
       userId,
       createdAt: Timestamp.now(),
@@ -60,7 +60,7 @@ export async function getTransactionsFromFirestore(): Promise<Transaction[]> {
   try {
     const userId = getUserId()
     const q = query(
-      collection(db, 'transactions'),
+      collection(db!, 'transactions'),
       where('userId', '==', userId),
       orderBy('date', 'desc')
     )
@@ -75,7 +75,7 @@ export async function saveTransactionToFirestore(tx: Transaction) {
   if (!FIREBASE_ENABLED) return
   try {
     const userId = getUserId()
-    await addDoc(collection(db, 'transactions'), {
+    await addDoc(collection(db!, 'transactions'), {
       ...tx,
       userId,
       createdAt: Timestamp.now(),
@@ -89,7 +89,7 @@ export async function getReferralDataFromFirestore(): Promise<ReferralData | nul
   if (!FIREBASE_ENABLED) return null
   try {
     const userId = getUserId()
-    const ref = doc(db, 'referrals', userId)
+    const ref = doc(db!, 'referrals', userId)
     const snap = await getDoc(ref)
     if (snap.exists()) return snap.data() as ReferralData
     return null
@@ -102,7 +102,7 @@ export async function saveReferralDataToFirestore(data: ReferralData) {
   if (!FIREBASE_ENABLED) return
   try {
     const userId = getUserId()
-    const ref = doc(db, 'referrals', userId)
+    const ref = doc(db!, 'referrals', userId)
     await setDoc(ref, { ...data, userId, updatedAt: Timestamp.now() })
   } catch {
     // fallback
@@ -112,7 +112,7 @@ export async function saveReferralDataToFirestore(data: ReferralData) {
 export async function addReferralToFirestore(referralUserId: string, inviterCode: string) {
   if (!FIREBASE_ENABLED) return
   try {
-    const q = query(collection(db, 'referrals'), where('code', '==', inviterCode))
+    const q = query(collection(db!, 'referrals'), where('code', '==', inviterCode))
     const snapshot = await getDocs(q)
     if (snapshot.empty) return
     const docRef = snapshot.docs[0].ref
