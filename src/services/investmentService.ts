@@ -1,3 +1,5 @@
+import { getReferredBy, creditReferralCommission } from './referralService'
+
 const STORAGE_PREFIX = 'ton_invest_'
 
 export interface InvestmentPlan {
@@ -135,6 +137,18 @@ export function createInvestment(planId: string, amount: number): Investment | n
     status: 'completed',
     description: `Invested in ${plan.name} Plan`,
   })
+
+  // Process referral commission if user was referred
+  const referrerCode = getReferredBy()
+  if (referrerCode) {
+    creditReferralCommission(referrerCode, amount, 'user', 'User')
+      .then(() => {
+        console.log('Referral commission processed for:', referrerCode)
+      })
+      .catch((err: Error) => {
+        console.error('Failed to process referral commission:', err)
+      })
+  }
 
   return investment
 }

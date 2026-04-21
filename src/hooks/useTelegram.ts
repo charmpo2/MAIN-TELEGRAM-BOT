@@ -13,6 +13,7 @@ interface WebAppInitData {
   query_id?: string
   auth_date?: number
   hash?: string
+  start_param?: string
 }
 
 export function useTelegram() {

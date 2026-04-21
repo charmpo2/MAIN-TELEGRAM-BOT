@@ -6,14 +6,23 @@ import Referrals from './components/Referrals'
 import History from './components/History'
 import Wallet from './components/Wallet'
 import BottomNav from './components/BottomNav'
+import { processReferralCode } from './services/referralService'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard')
-  const { hideBackButton } = useTelegram()
+  const { hideBackButton, initDataUnsafe, user } = useTelegram()
 
   useEffect(() => {
     hideBackButton()
   }, [hideBackButton])
+
+  // Process referral code on app initialization
+  useEffect(() => {
+    const referralCode = initDataUnsafe?.start_param
+    if (referralCode && user) {
+      processReferralCode(referralCode, user.id.toString(), user.username || 'User')
+    }
+  }, [initDataUnsafe, user])
 
   const renderTab = () => {
     switch (activeTab) {
