@@ -1,7 +1,7 @@
 {
-  "url": "https://main-telegram-bot.vercel.app",
+  "url": "https://tonspaces.vercel.app",
   "name": "TON Spacer",
-  "iconUrl": "https://main-telegram-bot.vercel.app/icon.svg",
-  "termsOfUseUrl": "https://main-telegram-bot.vercel.app/terms",
-  "privacyPolicyUrl": "https://main-telegram-bot.vercel.app/privacy"
+  "iconUrl": "https://tonspaces.vercel.app/icon.svg",
+  "termsOfUseUrl": "https://tonspaces.vercel.app/terms",
+  "privacyPolicyUrl": "https://tonspaces.vercel.app/privacy"
 }
