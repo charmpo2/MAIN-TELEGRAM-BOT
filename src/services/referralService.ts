@@ -7,7 +7,7 @@ const REFERRAL_PROCESSED_KEY = 'ton_referral_processed'
  * Process a referral code when a new user joins
  * This should be called once when the app initializes
  */
-export async function processReferralCode(referralCode: string | null, userId: string, username: string): Promise<boolean> {
+export async function processReferralCode(referralCode: string | null, _userId: string, _username: string): Promise<boolean> {
   if (!referralCode) return false
   
   // Check if we already processed a referral for this user
@@ -28,7 +28,7 @@ export async function processReferralCode(referralCode: string | null, userId: s
 
     // Try to sync with Firebase if available
     if (isFirebaseEnabled()) {
-      await addReferralToFirestore(userId, referralCode)
+      await addReferralToFirestore(_userId, referralCode)
     }
 
     console.log('Referral processed:', referralCode)
@@ -49,7 +49,7 @@ export function getReferredBy(): string | null {
 /**
  * Credit commission to referrer when referred user makes a deposit
  */
-export async function creditReferralCommission(referrerCode: string, amount: number, userId: string, username: string): Promise<boolean> {
+export async function creditReferralCommission(referrerCode: string, amount: number, _userId: string, username: string): Promise<boolean> {
   if (!referrerCode || amount <= 0) return false
 
   const commission = amount * 0.05 // 5% commission
