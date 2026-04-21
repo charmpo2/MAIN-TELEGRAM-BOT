@@ -1,0 +1,37 @@
+import { useState, useEffect } from 'react'
+import { useTelegram } from './hooks/useTelegram'
+import Dashboard from './components/Dashboard'
+import Invest from './components/Invest'
+import Referrals from './components/Referrals'
+import History from './components/History'
+import Wallet from './components/Wallet'
+import BottomNav from './components/BottomNav'
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('dashboard')
+  const { hideBackButton } = useTelegram()
+
+  useEffect(() => {
+    hideBackButton()
+  }, [hideBackButton])
+
+  const renderTab = () => {
+    switch (activeTab) {
+      case 'dashboard': return <Dashboard />
+      case 'invest': return <Invest />
+      case 'wallet': return <Wallet />
+      case 'referrals': return <Referrals />
+      case 'history': return <History />
+      default: return <Dashboard />
+    }
+  }
+
+  return (
+    <div className="flex flex-col h-full w-full relative bg-ton-dark text-white overflow-hidden">
+      <main className="flex-1 overflow-hidden">
+        {renderTab()}
+      </main>
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+    </div>
+  )
+}
