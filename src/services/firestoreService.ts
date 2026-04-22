@@ -10,6 +10,7 @@ import {
   where,
   orderBy,
   Timestamp,
+  onSnapshot,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import type { Investment, Transaction, ReferralData } from './investmentService'
@@ -131,4 +132,25 @@ export async function addReferralToFirestore(referralUserId: string, inviterCode
   } catch {
     // fallback
   }
+}
+
+// Subscribe to admin settings for maintenance mode
+export function subscribeToAdminSettings(callback: (settings: { maintenanceMode: boolean }) => void) {
+  if (!FIREBASE_ENABLED) {
+    // Return default (maintenance off) if Firebase not enabled
+    callback({ maintenanceMode: false })
+    return () => {}
+  }
+  
+  return onSnapshot(doc(db!, 'settings', 'admin'), (snap) => {
+    if (snap.exists()) {
+      const data = snap.data()
+      callback({ maintenanceMode: data.maintenanceMode || false })
+    } else {
+      callback({ maintenanceMode: false })
+    }
+  }, (error) => {
+    console.error('Settings subscription error:', error)
+    callback({ maintenanceMode: false })
+  })
 }

@@ -6,15 +6,26 @@ import Referrals from './components/Referrals'
 import History from './components/History'
 import Wallet from './components/Wallet'
 import BottomNav from './components/BottomNav'
+import MaintenanceScreen from './components/MaintenanceScreen'
 import { processReferralCode } from './services/referralService'
+import { subscribeToAdminSettings } from './services/firestoreService'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [maintenanceMode, setMaintenanceMode] = useState(false)
   const { hideBackButton, initDataUnsafe, user } = useTelegram()
 
   useEffect(() => {
     hideBackButton()
   }, [hideBackButton])
+
+  // Subscribe to maintenance mode from Firebase
+  useEffect(() => {
+    const unsubscribe = subscribeToAdminSettings((settings) => {
+      setMaintenanceMode(settings.maintenanceMode)
+    })
+    return () => unsubscribe()
+  }, [])
 
   // Process referral code on app initialization
   useEffect(() => {
@@ -23,6 +34,11 @@ export default function App() {
       processReferralCode(referralCode, user.id.toString(), user.username || 'User')
     }
   }, [initDataUnsafe, user])
+
+  // Show maintenance screen if enabled
+  if (maintenanceMode) {
+    return <MaintenanceScreen />
+  }
 
   const renderTab = () => {
     switch (activeTab) {
@@ -41,6 +57,12 @@ export default function App() {
         {renderTab()}
       </main>
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Debug indicator - remove in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed top-0 right-0 bg-black/50 text-white/50 text-[10px] px-2 py-1">
+          Maint: {maintenanceMode ? 'ON' : 'OFF'}
+        </div>
+      )}
     </div>
   )
 }
