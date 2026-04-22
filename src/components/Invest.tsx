@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { ArrowRight, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, AlertTriangle, CheckCircle2, Info } from 'lucide-react'
 import { TonConnectButton, useTonWallet, useTonConnectUI } from '@tonconnect/ui-react'
 import { useTelegram } from '../hooks/useTelegram'
+import { useAdminSettings } from '../hooks/useAdminSettings'
 import { getPlans, createInvestment } from '../services/investmentService'
 import { toNano } from '@ton/ton'
 
@@ -17,6 +18,7 @@ export default function Invest() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+  const { settings } = useAdminSettings()
 
   const plans = getPlans()
   const plan = plans.find(p => p.id === selectedPlan)
@@ -110,6 +112,14 @@ export default function Invest() {
           </div>
         </div>
       )}
+
+      {/* Min Deposit Info */}
+      <div className="bg-ton-card/50 border border-white/10 rounded-lg p-3 flex items-center gap-2">
+        <Info size={16} className="text-ton-accent shrink-0" />
+        <p className="text-white/60 text-xs">
+          Minimum deposit: <span className="text-ton-accent font-medium">{settings.minDeposit} TON</span>
+        </p>
+      </div>
 
       {/* Investment Plans */}
       <div>

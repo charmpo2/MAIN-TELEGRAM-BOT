@@ -134,14 +134,28 @@ export async function addReferralToFirestore(referralUserId: string, inviterCode
   }
 }
 
-// Subscribe to admin settings for maintenance mode
-export function subscribeToAdminSettings(callback: (settings: { maintenanceMode: boolean }) => void) {
+// Admin settings type
+export interface AdminSettings {
+  maintenanceMode: boolean
+  minDeposit: number
+  minWithdrawal: number
+  withdrawalFee: number
+}
+
+const defaultSettings: AdminSettings = {
+  maintenanceMode: false,
+  minDeposit: 1,
+  minWithdrawal: 10,
+  withdrawalFee: 0.5
+}
+
+// Subscribe to admin settings
+export function subscribeToAdminSettings(callback: (settings: AdminSettings) => void) {
   console.log('[Firestore] FIREBASE_ENABLED:', FIREBASE_ENABLED)
-  console.log('[Firestore] db instance:', db)
   
   if (!FIREBASE_ENABLED) {
     console.warn('[Firestore] Firebase not enabled - check env vars!')
-    callback({ maintenanceMode: false })
+    callback(defaultSettings)
     return () => {}
   }
   
@@ -151,13 +165,18 @@ export function subscribeToAdminSettings(callback: (settings: { maintenanceMode:
     if (snap.exists()) {
       const data = snap.data()
       console.log('[Firestore] Settings data:', data)
-      callback({ maintenanceMode: data.maintenanceMode || false })
+      callback({
+        maintenanceMode: data.maintenanceMode ?? false,
+        minDeposit: data.minDeposit ?? 1,
+        minWithdrawal: data.minWithdrawal ?? 10,
+        withdrawalFee: data.withdrawalFee ?? 0.5
+      })
     } else {
-      console.log('[Firestore] Settings doc does not exist')
-      callback({ maintenanceMode: false })
+      console.log('[Firestore] Settings doc does not exist, using defaults')
+      callback(defaultSettings)
     }
   }, (error) => {
     console.error('[Firestore] Settings subscription error:', error)
-    callback({ maintenanceMode: false })
+    callback(defaultSettings)
   })
 }

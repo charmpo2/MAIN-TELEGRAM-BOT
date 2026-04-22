@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react'
-import { Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft, Send, AlertTriangle, CheckCircle2, Copy } from 'lucide-react'
+import { Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft, Send, AlertTriangle, CheckCircle2, Copy, Info } from 'lucide-react'
 import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react'
 import { useTelegram } from '../hooks/useTelegram'
+import { useAdminSettings } from '../hooks/useAdminSettings'
 import { getTransactions, addTransaction } from '../services/investmentService'
 
 export default function Wallet() {
@@ -12,6 +13,7 @@ export default function Wallet() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const { settings } = useAdminSettings()
 
   const transactions = getTransactions().filter(t => t.type === 'withdraw' || t.type === 'deposit')
 
@@ -42,6 +44,11 @@ export default function Wallet() {
     const numAmount = parseFloat(amount)
     if (isNaN(numAmount) || numAmount <= 0) {
       setError('Please enter a valid amount')
+      return
+    }
+
+    if (numAmount < settings.minWithdrawal) {
+      setError(`Minimum withdrawal is ${settings.minWithdrawal} TON`)
       return
     }
 
@@ -129,10 +136,19 @@ export default function Wallet() {
       {/* Withdraw Form */}
       {wallet && (
         <div className="bg-ton-card rounded-xl p-4 border border-white/10">
-          <h3 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
+          <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
             <Send size={16} className="text-ton-accent" />
             Withdraw TON
           </h3>
+
+          {/* Min Withdrawal & Fee Info */}
+          <div className="bg-ton-card/50 border border-white/10 rounded-lg p-3 flex items-start gap-2 mb-3">
+            <Info size={16} className="text-ton-accent shrink-0 mt-0.5" />
+            <div className="text-xs text-white/60">
+              <p>Minimum withdrawal: <span className="text-ton-accent font-medium">{settings.minWithdrawal} TON</span></p>
+              <p className="mt-0.5">Fee: <span className="text-ton-accent font-medium">{settings.withdrawalFee} TON</span></p>
+            </div>
+          </div>
 
           <div className="space-y-3">
             <div>
