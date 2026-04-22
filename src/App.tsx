@@ -21,10 +21,15 @@ export default function App() {
 
   // Subscribe to maintenance mode from Firebase
   useEffect(() => {
+    console.log('[Maintenance] Subscribing to settings...')
     const unsubscribe = subscribeToAdminSettings((settings) => {
+      console.log('[Maintenance] Settings received:', settings)
       setMaintenanceMode(settings.maintenanceMode)
     })
-    return () => unsubscribe()
+    return () => {
+      console.log('[Maintenance] Unsubscribing...')
+      unsubscribe()
+    }
   }, [])
 
   // Process referral code on app initialization
@@ -57,12 +62,12 @@ export default function App() {
         {renderTab()}
       </main>
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-      {/* Debug indicator - remove in production */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed top-0 right-0 bg-black/50 text-white/50 text-[10px] px-2 py-1">
-          Maint: {maintenanceMode ? 'ON' : 'OFF'}
-        </div>
-      )}
+      {/* Maintenance status indicator - always visible for debugging */}
+      <div className={`fixed top-0 right-0 text-[10px] px-2 py-1 z-50 ${
+        maintenanceMode ? 'bg-red-500/80 text-white' : 'bg-black/50 text-white/50'
+      }`}>
+        Maint: {maintenanceMode ? 'ON' : 'OFF'}
+      </div>
     </div>
   )
 }

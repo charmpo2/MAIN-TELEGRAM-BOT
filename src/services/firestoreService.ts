@@ -136,21 +136,28 @@ export async function addReferralToFirestore(referralUserId: string, inviterCode
 
 // Subscribe to admin settings for maintenance mode
 export function subscribeToAdminSettings(callback: (settings: { maintenanceMode: boolean }) => void) {
+  console.log('[Firestore] FIREBASE_ENABLED:', FIREBASE_ENABLED)
+  console.log('[Firestore] db instance:', db)
+  
   if (!FIREBASE_ENABLED) {
-    // Return default (maintenance off) if Firebase not enabled
+    console.warn('[Firestore] Firebase not enabled - check env vars!')
     callback({ maintenanceMode: false })
     return () => {}
   }
   
+  console.log('[Firestore] Subscribing to settings/admin...')
   return onSnapshot(doc(db!, 'settings', 'admin'), (snap) => {
+    console.log('[Firestore] Settings snapshot received:', snap.exists())
     if (snap.exists()) {
       const data = snap.data()
+      console.log('[Firestore] Settings data:', data)
       callback({ maintenanceMode: data.maintenanceMode || false })
     } else {
+      console.log('[Firestore] Settings doc does not exist')
       callback({ maintenanceMode: false })
     }
   }, (error) => {
-    console.error('Settings subscription error:', error)
+    console.error('[Firestore] Settings subscription error:', error)
     callback({ maintenanceMode: false })
   })
 }
