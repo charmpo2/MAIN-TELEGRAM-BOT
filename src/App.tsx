@@ -8,7 +8,7 @@ import Wallet from './components/Wallet'
 import BottomNav from './components/BottomNav'
 import MaintenanceScreen from './components/MaintenanceScreen'
 import { processReferralCode } from './services/referralService'
-import { subscribeToAdminSettings, type AdminSettings } from './services/firestoreService'
+import { subscribeToAdminSettings } from './services/firestoreService'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -20,18 +20,10 @@ export default function App() {
   }, [hideBackButton])
 
   // Subscribe to settings from Firebase
-  const [settings, setSettings] = useState<AdminSettings>({
-    maintenanceMode: false,
-    minDeposit: 1,
-    minWithdrawal: 10,
-    withdrawalFee: 0.5
-  })
-  
   useEffect(() => {
     console.log('[Maintenance] Subscribing to settings...')
     const unsubscribe = subscribeToAdminSettings((newSettings) => {
       console.log('[Maintenance] Settings received:', newSettings)
-      setSettings(newSettings)
       setMaintenanceMode(newSettings.maintenanceMode)
     })
     return () => {
